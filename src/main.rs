@@ -84,7 +84,7 @@ fn generate_and_save_rsa_keypair(priv_path: &str, pub_path: &str) -> (String, St
     use rsa::{pkcs8::{EncodePrivateKey, EncodePublicKey}, RsaPrivateKey};
     use rand::rngs::OsRng;
     let mut rng = OsRng;
-    let key = RsaPrivateKey::new(&mut rng, 2048).expect("Failed to generate key");
+    let key = RsaPrivateKey::new(&mut rng, 4096).expect("Failed to generate key");
     let priv_pem = key.to_pkcs8_pem(rsa::pkcs8::LineEnding::LF)
         .expect("Failed to encode private key").to_string();
     let pub_pem = key.to_public_key().to_public_key_pem(rsa::pkcs8::LineEnding::LF)
