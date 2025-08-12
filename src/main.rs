@@ -1,4 +1,8 @@
 /// POST handler to regenerate the RSA keypair.
+/// POST handler to regenerate the RSA keypair.
+///
+/// Regenerates a new 4096-bit RSA keypair and overwrites the existing private_key.pem and public_key.pem files.
+/// Returns a JSON status object.
 async fn regenerate_keys() -> impl IntoResponse {
     let priv_path = "private_key.pem";
     let pub_path = "public_key.pem";
@@ -22,6 +26,13 @@ struct VerifyResponse {
 }
 
 /// POST handler to verify a JWS signature with a public key and JSON.
+/// POST handler to verify a JWS signature with a public key and JSON.
+///
+/// # Arguments
+/// * `req` - JSON body containing the JWS, the original JSON, and the public key.
+///
+/// # Returns
+/// JSON object indicating if the signature is valid and an error/warning message if any.
 async fn verify_signature(Json(req): Json<VerifyRequest>) -> impl IntoResponse {
     use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
     let mut validation = Validation::new(Algorithm::RS512);
@@ -92,6 +103,10 @@ enum ServerError {
 }
 
 impl IntoResponse for ServerError {
+    /// Converts a ServerError into an HTTP response with a JSON error message.
+    ///
+    /// # Returns
+    /// An HTTP 500 response with a JSON error message.
     fn into_response(self) -> axum::response::Response {
         let msg = self.to_string();
         (
@@ -102,6 +117,14 @@ impl IntoResponse for ServerError {
     }
 }
 
+/// POST handler to sign a JSON object and return a JWS, the original JSON, and the public key.
+///
+/// # Arguments
+/// * `state` - Shared application state containing the encoding key.
+/// * `payload` - The JSON object to be signed.
+///
+/// # Returns
+/// A JSON response containing the JWS string, the original JSON, and the public key.
 async fn sign_json(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<InputPayload>,
@@ -118,6 +141,11 @@ struct AppState {
 }
 
 
+/// Main entry point. Loads or generates RSA keys, sets up the Axum server, and starts listening for requests.
+///
+/// - Loads or generates a 4096-bit RSA keypair.
+/// - Sets up all HTTP routes and shared state.
+/// - Binds to 127.0.0.1:5000 and serves requests.
 #[tokio::main]
 async fn main() {
     let priv_path = "private_key.pem";
@@ -143,6 +171,10 @@ async fn main() {
         .route("/regenerate_keys", post(regenerate_keys))
         .with_state(state);
 /// Serves the demo HTML page for signing JSON and displaying the JWS.
+/// Serves the demo HTML page for signing JSON and displaying the JWS.
+///
+/// # Returns
+/// HTML content of the demo page, or a not found message if missing.
 async fn serve_demo_html() -> impl IntoResponse {
     match std::fs::read_to_string("jws_demo.html") {
         Ok(contents) => axum::response::Html(contents),
@@ -157,7 +189,14 @@ async fn serve_demo_html() -> impl IntoResponse {
         .unwrap();
 }
 
-/// Generate a 4096-bit RSA keypair, save to priv/pub files, and return (priv_pem, pub_pem)
+/// Generates a 4096-bit RSA keypair, saves them to the given file paths, and returns the PEM strings.
+///
+/// # Arguments
+/// * `priv_path` - Path to save the private key PEM file.
+/// * `pub_path` - Path to save the public key PEM file.
+///
+/// # Returns
+/// Tuple of (private_key_pem, public_key_pem) as Strings.
 fn generate_and_save_rsa_keypair(priv_path: &str, pub_path: &str) -> (String, String) {
     use rsa::{pkcs8::{EncodePrivateKey, EncodePublicKey}, RsaPrivateKey};
     use rand::rngs::OsRng;
