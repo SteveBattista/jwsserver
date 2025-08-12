@@ -15,8 +15,6 @@
 </head>
 <body>
     <h1>JSON Web Signature Demo</h1>
-    <button id="regen-btn" type="button" style="margin-bottom:1em;">Regenerate Keys</button>
-    <div class="result" id="regen-result" style="display:none;"></div>
     <form id="jws-form">
         <label for="json-input">Input JSON:</label><br>
         <textarea id="json-input" required>{"foo": "bar"}</textarea><br>
@@ -26,20 +24,6 @@
     <button id="check-btn" type="button" style="margin-top:1em;">Check JWS</button>
     <div class="result" id="check-result" style="display:none;"></div>
     <script>
-    document.getElementById('regen-btn').onclick = async function() {
-        document.getElementById('regen-result').style.display = 'block';
-        document.getElementById('regen-result').textContent = 'Regenerating keys...';
-        try {
-            const res = await fetch('/regenerate_keys', { method: 'POST' });
-            if (res.ok) {
-                document.getElementById('regen-result').innerHTML = '<b style="color:green">Keys regenerated successfully. Please sign again.</b>';
-            } else {
-                document.getElementById('regen-result').innerHTML = '<b style="color:red">Failed to regenerate keys.</b>';
-            }
-        } catch (err) {
-            document.getElementById('regen-result').innerHTML = '<b style="color:red">Network error: ' + err.message + '</b>';
-        }
-    };
     // Get public key from file (in real deployment, fetch or embed as needed)
     const defaultPubKey = `-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv0hR8J64JQdHju3eX58C\nGSwb0s8XmqGgqyK3Jyx+L6Eaz9/ZPsi4+FOzwzuNp9wEJhL5K8/0784avZp9nSp0\ndj8tNMWY+7xqPgN71HLmnsEK+NHY5oiv7UTxmjBg5+jW6uXMvJzIDUCR87tdV+JX\nma4IDU+Fzg5dJ6nD4RY8gtuzrBENocaD/I8ftcEryEJNg/2c69AOpD0CPoIZOW3n\n4YWMjhJSCAWFK8ybYoPotM34t74Jb0MXeK3wPvQs5KT6wB0zkXIVK+QWIIJ4f6LS\niNpDs455qksOBUBIZD0oejnpU7Ft0ywkbPDC0TReF4iHXRbByZuUckYreuVZf/9r\nIwIDAQAB\n-----END PUBLIC KEY-----`;
 
