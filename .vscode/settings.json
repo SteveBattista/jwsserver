@@ -1,0 +1,11 @@
+{
+    "cSpell.words": [
+        "jsonwebtoken",
+        "jwsserver",
+        "keypair",
+        "pkcs",
+        "rngs",
+        "serde",
+        "thiserror"
+    ]
+}
