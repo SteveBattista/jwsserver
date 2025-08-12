@@ -182,7 +182,7 @@ async fn serve_demo_html() -> impl IntoResponse {
     }
 }
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 5000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 5000));
     println!("Listening on http://{}", addr);
     axum::serve(tokio::net::TcpListener::bind(addr).await.unwrap(), app)
         .await

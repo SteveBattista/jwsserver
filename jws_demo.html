@@ -101,7 +101,8 @@
             }
             if (res.ok && isJson) {
                 if (data.valid) {
-                    document.getElementById('check-result').innerHTML = '<b style="color:green">Signature is VALID</b>';
+                    document.getElementById('check-result').innerHTML = '<b style="color:green">Signature is VALID</b>' +
+                        (data.error ? '<br><pre>' + data.error + '</pre>' : '');
                 } else {
                     document.getElementById('check-result').innerHTML = '<b style="color:red">Signature is INVALID</b><br>' +
                         (data.error ? '<pre>' + data.error + '</pre>' : '');
