@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWS Signer Demo</title>
+    <style>
+        body { font-family: sans-serif; background: #f8f9fa; margin: 2em; }
+        textarea { width: 100%; height: 120px; font-family: monospace; }
+        button { padding: 0.5em 1em; font-size: 1em; }
+    .result { margin-top: 1em; background: #fff; padding: 1em; border-radius: 6px; box-shadow: 0 1px 4px #0001; }
+    pre#jws-output { white-space: pre-wrap; word-break: break-all; }
+        label { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>JSON Web Signature Demo</h1>
+    <button id="regen-btn" type="button" style="margin-bottom:1em;">Regenerate Keys</button>
+    <div class="result" id="regen-result" style="display:none;"></div>
+    <form id="jws-form">
+        <label for="json-input">Input JSON:</label><br>
+        <textarea id="json-input" required>{"foo": "bar"}</textarea><br>
+        <button type="submit">Sign JSON</button>
+    </form>
+    <div class="result" id="result" style="display:none;"></div>
+    <button id="check-btn" type="button" style="margin-top:1em;">Check JWS</button>
+    <div class="result" id="check-result" style="display:none;"></div>
+    <script>
+    document.getElementById('regen-btn').onclick = async function() {
+        document.getElementById('regen-result').style.display = 'block';
+        document.getElementById('regen-result').textContent = 'Regenerating keys...';
+        try {
+            const res = await fetch('/regenerate_keys', { method: 'POST' });
+            if (res.ok) {
+                document.getElementById('regen-result').innerHTML = '<b style="color:green">Keys regenerated successfully. Please sign again.</b>';
+            } else {
+                document.getElementById('regen-result').innerHTML = '<b style="color:red">Failed to regenerate keys.</b>';
+            }
+        } catch (err) {
+            document.getElementById('regen-result').innerHTML = '<b style="color:red">Network error: ' + err.message + '</b>';
+        }
+    };
+    // Get public key from file (in real deployment, fetch or embed as needed)
+    const defaultPubKey = `-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv0hR8J64JQdHju3eX58C\nGSwb0s8XmqGgqyK3Jyx+L6Eaz9/ZPsi4+FOzwzuNp9wEJhL5K8/0784avZp9nSp0\ndj8tNMWY+7xqPgN71HLmnsEK+NHY5oiv7UTxmjBg5+jW6uXMvJzIDUCR87tdV+JX\nma4IDU+Fzg5dJ6nD4RY8gtuzrBENocaD/I8ftcEryEJNg/2c69AOpD0CPoIZOW3n\n4YWMjhJSCAWFK8ybYoPotM34t74Jb0MXeK3wPvQs5KT6wB0zkXIVK+QWIIJ4f6LS\niNpDs455qksOBUBIZD0oejnpU7Ft0ywkbPDC0TReF4iHXRbByZuUckYreuVZf/9r\nIwIDAQAB\n-----END PUBLIC KEY-----`;
+
+    document.getElementById('jws-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const input = document.getElementById('json-input').value;
+        let json, jsonSentStr;
+        try {
+            json = JSON.parse(input);
+            jsonSentStr = JSON.stringify(json, null, 2);
+        } catch (err) {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').innerHTML = '<b>Invalid JSON:</b> ' + err.message;
+            return;
+        }
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('result').textContent = 'Signing...';
+        try {
+            const res = await fetch('/sign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(json)
+            });
+            let data = null;
+            let isJson = false;
+            try {
+                data = await res.json();
+                isJson = true;
+            } catch (jsonErr) {
+                // Not valid JSON
+            }
+                        if (res.ok && isJson) {
+                                // Store the signed JSON (with exp) for later verification
+                                window.signedJsonWithExp = data.json;
+                                window.signedPublicKey = data.public_key;
+                                document.getElementById('result').innerHTML =
+                                    '<b>JWS:</b><br><pre id="jws-output">' + (data.jws || '') + '</pre>' +
+                                    '<b>JSON Sent:</b><br><pre id="json-output">' + jsonSentStr + '</pre>' +
+                                    '<b>Public Key:</b><br><pre id="pubkey-output">' + (data.public_key || '') + '</pre>';
+            } else if (isJson && data && data.error) {
+                document.getElementById('result').textContent = 'Error: ' + data.error;
+            } else {
+                document.getElementById('result').textContent = 'Network or server error.';
+            }
+        } catch (err) {
+            document.getElementById('result').textContent = 'Network error: ' + err.message;
+        }
+    };
+
+    document.getElementById('check-btn').onclick = async function() {
+        // Get JWS and JSON from the result area
+        const jws = document.getElementById('jws-output')?.textContent.trim();
+        // Use the signed JSON (with exp) for verification
+        if (!jws || !window.signedJsonWithExp) {
+            document.getElementById('check-result').style.display = 'block';
+            document.getElementById('check-result').innerHTML = '<b>Please sign a JSON first.</b>';
+            return;
+        }
+        const json = window.signedJsonWithExp;
+        document.getElementById('check-result').style.display = 'block';
+        document.getElementById('check-result').textContent = 'Checking...';
+        try {
+            const res = await fetch('/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jws, json, public_key: window.signedPublicKey })
+            });
+            let data = null;
+            let isJson = false;
+            try {
+                data = await res.json();
+                isJson = true;
+            } catch (jsonErr) {
+                // Not valid JSON
+            }
+            if (res.ok && isJson) {
+                if (data.valid) {
+                    document.getElementById('check-result').innerHTML = '<b style="color:green">Signature is VALID</b>';
+                } else {
+                    document.getElementById('check-result').innerHTML = '<b style="color:red">Signature is INVALID</b><br>' +
+                        (data.error ? '<pre>' + data.error + '</pre>' : '');
+                }
+            } else if (isJson && data && data.error) {
+                document.getElementById('check-result').textContent = 'Error: ' + data.error;
+            } else {
+                document.getElementById('check-result').textContent = 'Network or server error.';
+            }
+        } catch (err) {
+            document.getElementById('check-result').textContent = 'Network error: ' + err.message;
+        }
+    };
+    </script>
+</body>
+</html>
