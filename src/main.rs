@@ -138,6 +138,7 @@ async fn main() {
     let app = Router::new()
         .route("/sign", post(sign_json))
         .route("/demo", axum::routing::get(serve_demo_html))
+        .route("/", axum::routing::get(serve_demo_html))
         .route("/verify", post(verify_signature))
         .route("/regenerate_keys", post(regenerate_keys))
         .with_state(state);
