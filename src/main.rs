@@ -169,8 +169,8 @@ async fn main() {
         .route("/", axum::routing::get(serve_demo_html))
         .route("/verify", post(verify_signature))
         .route("/regenerate_keys", post(regenerate_keys))
+        .route("/.well-known/public.pem", axum::routing::get(serve_public_key))
         .with_state(state);
-/// Serves the demo HTML page for signing JSON and displaying the JWS.
 /// Serves the demo HTML page for signing JSON and displaying the JWS.
 ///
 /// # Returns
@@ -179,6 +179,23 @@ async fn serve_demo_html() -> impl IntoResponse {
     match std::fs::read_to_string("jws_demo.html") {
         Ok(contents) => axum::response::Html(contents),
         Err(_) => axum::response::Html("<h1>Demo file not found</h1>".to_string()),
+    }
+}
+
+/// Serves the public key PEM file at /.well-known/public.pem
+///
+/// # Returns
+/// Plain text content of the public key PEM file, or an error message if missing.
+async fn serve_public_key() -> impl IntoResponse {
+    match std::fs::read_to_string("public_key.pem") {
+        Ok(contents) => (
+            [("Content-Type", "application/x-pem-file")],
+            contents
+        ).into_response(),
+        Err(_) => (
+            axum::http::StatusCode::NOT_FOUND,
+            "Public key not found"
+        ).into_response(),
     }
 }
 

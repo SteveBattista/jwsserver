@@ -78,6 +78,18 @@ Response (missing exp claim tolerated):
 
 Serves the interactive HTML demo page.
 
+### GET /.well-known/public.pem
+
+Serves the current public key in PEM format for signature verification.
+
+**Response:**
+
+```text
+-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA...
+-----END PUBLIC KEY-----
+```
+
 ## Keys and algorithms
 
 - On first run, a 4096-bit RSA keypair is generated and saved to:
@@ -85,6 +97,7 @@ Serves the interactive HTML demo page.
   - public_key.pem
 - Current signing algorithm: RS512 (RSA with SHA-512)
 - The public key is returned by /sign so clients can verify.
+- The public key is also available at /.well-known/public.pem for automated discovery.
 
 ## Demo usage
 
@@ -97,7 +110,7 @@ Serves the interactive HTML demo page.
 
 - Signature is invalid
   - Ensure the public_key.pem matches the private_key.pem used to sign
-  - Re-run, re-sign, and then verify using the public key returned by /sign
+  - Re-run, re-sign, and then verify using the public key returned by /sign or from /.well-known/public.pem
 - Network error or JSON errors
   - Check server logs and ensure the request/response bodies are valid JSON
 
