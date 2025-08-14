@@ -150,7 +150,6 @@ struct AppState {
 async fn main() {
     let priv_path = "private_key.pem";
     let pub_path = "public_key.pem";
-
     // Check if private key exists, else generate and save
     let private_key_pem = if Path::new(priv_path).exists() {
         fs::read_to_string(priv_path).expect("Failed to read private key file")
@@ -169,12 +168,12 @@ async fn main() {
         .route("/", axum::routing::get(serve_demo_html))
         .route("/verify", post(verify_signature))
         .route("/regenerate_keys", post(regenerate_keys))
-        .route("/.well-known/public.pem", axum::routing::get(serve_public_key))
+        .route("/well-known/public.pem", axum::routing::get(serve_public_key))
         .with_state(state);
 /// Serves the demo HTML page for signing JSON and displaying the JWS.
 ///
 /// # Returns
-/// HTML content of the demo page, or a not found message if missing.
+/// HTML content of the demo page, or a not found message if missing.  
 async fn serve_demo_html() -> impl IntoResponse {
     match std::fs::read_to_string("jws_demo.html") {
         Ok(contents) => axum::response::Html(contents),
@@ -182,7 +181,7 @@ async fn serve_demo_html() -> impl IntoResponse {
     }
 }
 
-/// Serves the public key PEM file at /.well-known/public.pem
+/// Serves the public key PEM file at /well-known/public.pem
 ///
 /// # Returns
 /// Plain text content of the public key PEM file, or an error message if missing.
