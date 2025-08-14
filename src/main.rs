@@ -1,7 +1,7 @@
 /// POST handler to regenerate the RSA keypair.
 /// POST handler to regenerate the RSA keypair.
 ///
-/// Regenerates a new 4096-bit RSA keypair and overwrites the existing private_key.pem and public_key.pem files.
+/// Regenerates a new 4096-bit RSA keypair and overwrites the existing `private_key.pem` and `public_key.pem` files.
 /// Returns a JSON status object.
 async fn regenerate_keys() -> impl IntoResponse {
     let priv_path = "private_key.pem";
@@ -42,7 +42,7 @@ async fn verify_signature(Json(req): Json<VerifyRequest>) -> impl IntoResponse {
         Err(e) => {
             return Json(VerifyResponse {
                 valid: false,
-                error: Some(format!("Invalid public key: {}", e)),
+                error: Some(format!("Invalid public key: {e}")),
             });
         }
     };
@@ -66,7 +66,7 @@ async fn verify_signature(Json(req): Json<VerifyRequest>) -> impl IntoResponse {
             } else {
                 Json(VerifyResponse {
                     valid: false,
-                    error: Some(format!("Signature verification failed: {}", e)),
+                    error: Some(format!("Signature verification failed: {e}")),
                 })
             }
         }
@@ -103,7 +103,7 @@ enum ServerError {
 }
 
 impl IntoResponse for ServerError {
-    /// Converts a ServerError into an HTTP response with a JSON error message.
+    /// Converts a `ServerError` into an HTTP response with a JSON error message.
     ///
     /// # Returns
     /// An HTTP 500 response with a JSON error message.
@@ -200,7 +200,7 @@ async fn serve_public_key() -> impl IntoResponse {
 }
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 5000));
-    println!("Listening on http://{}", addr);
+    println!("Listening on http://{addr}");
     axum::serve(tokio::net::TcpListener::bind(addr).await.unwrap(), app)
         .await
         .unwrap();
@@ -213,7 +213,7 @@ async fn serve_public_key() -> impl IntoResponse {
 /// * `pub_path` - Path to save the public key PEM file.
 ///
 /// # Returns
-/// Tuple of (private_key_pem, public_key_pem) as Strings.
+/// Tuple of (`private_key_pem`, `public_key_pem`) as Strings.
 fn generate_and_save_rsa_keypair(priv_path: &str, pub_path: &str) -> (String, String) {
     use rsa::{pkcs8::{EncodePrivateKey, EncodePublicKey}, RsaPrivateKey};
     use rand::rngs::OsRng;
